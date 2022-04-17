@@ -64,13 +64,10 @@ class Human:
         for word in syllable_list:
             if word in used:
                 continue
-            if syllable in word:
-                if top > len(word) or top == len(missing):
-                    break
-                score = len(set(word.lower()).intersection(missing))
-                if score > top:
-                    best_word = word
-                    top = score
+            score = len(set(word.lower()).intersection(missing))
+            if score > top:
+                best_word = word
+                top = score
         if best_word:
             self.gameSio.emit("setWord", (best_word, True))
             used.add(best_word)
