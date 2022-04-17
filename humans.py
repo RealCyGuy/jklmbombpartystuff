@@ -226,7 +226,7 @@ print(f"https://jklm.fun/{code}")
 humans = []
 human_ids = set()
 latest_word = ""
-for x in range(8):
+for x in range(4):
     humans.append(Human(token, data["url"], f"Human {x}"))
     humans[-1].connect_and_join()
     token = create_token()
