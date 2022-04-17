@@ -91,14 +91,26 @@ class Human:
             elif command == "syllable" or command == "c" and self.peerId == self.leaderPeerId:
                 syllable = self.milestone.get("syllable", "")
                 if syllable:
+                    syllable_list = word_dict.get(syllable)
+                    if not syllable_list:
+                        syllable_list = set([word for word in words if syllable in word])
+                        word_dict[syllable] = syllable_list
+                    syllable_list = sorted(list(syllable_list), key=lambda x: len(x))
                     p_words = []
-                    for word in words:
-                        if syllable in word:
-                            p_words.append(word)
-                            if len(p_words) >= 5:
-                                break
+                    for word in syllable_list:
+                        if word in used:
+                            continue
+                        p_words.append(word.upper())
+                        if len(p_words) >= 5:
+                            break
+                    for word in reversed(syllable_list):
+                        if word in used or word in p_words:
+                            continue
+                        p_words.append(word.upper())
+                        if len(p_words) >= 10:
+                            break
                     if p_words:
-                        self.sio.emit("chat", ', '.join(p_words))
+                        self.sio.emit("chat", " ".join(p_words))
                     else:
                         self.sio.emit("chat", f"Couldn't find anything for {syllable}.")
                 else:
