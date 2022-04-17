@@ -4,7 +4,7 @@ import socketio
 import requests
 import numpy as np
 
-from utils import create_token
+from utils import create_token, cleanup_word
 
 token = create_token()
 
@@ -173,7 +173,7 @@ class Human:
         def correctWord(data):
             if self.is_leader():
                 if data["playerPeerId"] not in human_ids:
-                    used.add(latest_word.lower())
+                    used.add(cleanup_word(latest_word.lower()))
             if self.peerId == data["playerPeerId"]:
                 self.bonus_letters = data["bonusLetters"]
 
