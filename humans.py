@@ -7,7 +7,6 @@ import numpy as np
 from utils import create_token
 
 token = create_token()
-speed = False
 
 
 class Human:
@@ -57,18 +56,15 @@ class Human:
         missing = set(self.milestone["dictionaryManifest"]["bonusAlphabet"]) - set(self.bonus_letters)
         best_word = ""
         top = -1
-        syllable = self.milestone["syllable"].upper()
+        syllable = self.milestone["syllable"]
         syllable_list = word_dict.get(syllable)
-        # if syllable_list:
-        #     pass
-        # else:
-        for word in (syllable_list if syllable_list else words):
+        if not syllable_list:
+            syllable_list = set([word for word in words if syllable in word])
+            word_dict[syllable] = syllable_list
+        for word in syllable_list:
             if word in used:
                 continue
             if syllable in word:
-                if speed:
-                    best_word = word
-                    break
                 if top > len(word) or top == len(missing):
                     break
                 score = len(set(word.lower()).intersection(missing))
@@ -96,7 +92,7 @@ class Human:
                 self.gameSio.emit("setRulesLocked", True)
                 self.gameSio.emit("startRoundNow")
             elif command == "syllable" or command == "c" and self.peerId == self.leaderPeerId:
-                syllable = self.milestone.get("syllable", "").upper()
+                syllable = self.milestone.get("syllable", "")
                 if syllable:
                     p_words = []
                     for word in words:
@@ -177,7 +173,7 @@ class Human:
         def correctWord(data):
             if self.is_leader():
                 if data["playerPeerId"] not in human_ids:
-                    used.add(latest_word.upper())
+                    used.add(latest_word.lower())
             if self.peerId == data["playerPeerId"]:
                 self.bonus_letters = data["bonusLetters"]
 
@@ -199,7 +195,7 @@ with open("lists/kaggle.txt", "r") as f:
 with open("testing/wrong.txt", "r") as f:
     words = words.difference(set(f.read().split()))
 
-words = [word.upper() for word in words]
+words = [word.lower() for word in words]
 words = list(set(words))
 random.shuffle(words)
 words.sort(key=lambda word: len(set(word)), reverse=True)
@@ -210,15 +206,6 @@ used = set()
 with open("testing/syllables.txt", "r") as f:
     syllables = set(f.read().split())
 word_dict = {}
-# for word in words:
-#     for syllable in syllables:
-#         if syllable.upper() in word:
-#             word_dict[syllable] = word_dict.get(syllable, []) + [word]
-# # for syllable in syllables:
-# #     print(syllable)
-# #     syllable = syllable.upper()
-# #     word_dict[syllable] = [x for x in words if syllable in x]
-# print(word_dict)
 
 payload = {
     "name": "Humans only!",
