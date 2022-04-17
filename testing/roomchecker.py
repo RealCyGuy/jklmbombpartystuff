@@ -113,27 +113,30 @@ async def main():
     print(f"Loaded {len(correct)} correct words.")
     with open("syllables.txt", "r") as f:
         syllables = f.read().split()
-
+    
+    print('Input codes like "jklm.fun/CODE":')
     rooms = {}
     while True:
-        code = await ainput()
-        code = code.replace("/", "")[-4:].upper()
-        room = rooms.get(code)
-        if room:
-            await room.disconnect()
-            del rooms[code]
-        else:
-            async with aiohttp.ClientSession() as session:
-                async with session.post("https://jklm.fun/api/joinRoom", json={"roomCode": code}) as response:
-                    if not response.ok:
-                        print("Code is bad?")
-                        continue
-                    url = (await response.json()).get("url")
-                    if not url:
-                        print("No url.")
-                        continue
-            rooms[code] = Human(create_token(), code, url, random.choice(correct))
-            await rooms[code].connect()
+        codes = await ainput()
+        codes = re.findall(r"jklm.fun/[A-Z]{4}", codes)
+        codes = set([code[-4:] for code in codes])
+        for code in codes:
+            room = rooms.get(code)
+            if room:
+                await room.disconnect()
+                del rooms[code]
+            else:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post("https://jklm.fun/api/joinRoom", json={"roomCode": code}) as response:
+                        if not response.ok:
+                            print("Code is bad?")
+                            continue
+                        url = (await response.json()).get("url")
+                        if not url:
+                            print("No url.")
+                            continue
+                rooms[code] = Human(create_token(), code, url, random.choice(correct))
+                await rooms[code].connect()
         print(rooms)
 
 
