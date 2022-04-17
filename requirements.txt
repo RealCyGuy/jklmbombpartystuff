@@ -1,0 +1,5 @@
+python-socketio[asyncio_client]==5.5.2
+requests
+aioconsole
+aiohttp
+numpy
