@@ -5,7 +5,7 @@ import time
 
 from utils import create_token
 
-with open("./testing/correct.txt", "r") as f:
+with open("../testing/correct.txt", "r") as f:
     correct = f.read().split()
 print(f"Loaded {len(correct)} correct words.")
 
