@@ -28,6 +28,11 @@ some scripts that aren't bots
 
 - `getpublicenglishbombpartygames.py`: get sorted public english bomb party games for use with `roomchecker.py`
 - `roomcreator.py`: create jklm.fun rooms
+- `profilepicture.py`: generate base64 data uri images for jklm profile pictures! it compresses images and allows transparency!
+
+### `pictures`
+
+some pictures
 
 ### `.`
 
