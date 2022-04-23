@@ -1,8 +1,9 @@
 import base64
 from PIL import Image, ImageOps
 from io import BytesIO
+import pyperclip
 
-im = Image.open("../pictures/croppedtransparentpenguindonut.png")
+im = Image.open("pictures/" + input("Enter image name (in scripts/pictures directory): "))
 im = ImageOps.exif_transpose(im)
 
 width, height = im.size
@@ -31,4 +32,7 @@ for x in range(5):
 if len(data) > 10000:
     print("Could not compress!")
 else:
-    print(data)
+    command = f"settings.picture = '{data}'\n" \
+              f"saveSettings()"
+    pyperclip.copy(command)
+    print("Copied command to clipboard.")

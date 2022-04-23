@@ -4,3 +4,4 @@ aioconsole
 aiohttp
 numpy
 pillow
+pyperclip
