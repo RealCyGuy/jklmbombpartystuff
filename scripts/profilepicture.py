@@ -32,7 +32,7 @@ for x in range(5):
 if len(data) > 10000:
     print("Could not compress!")
 else:
-    command = f"settings.picture = '{data}'\n" \
-              f"saveSettings()"
-    pyperclip.copy(command)
-    print("Copied command to clipboard.")
+    pyperclip.copy(data)
+    print("Copied picture to clipboard, paste into bookmarklet or run:\n\n"
+          f"settings.picture = 'PASTE_PICTURE_HERE'\n" 
+          f"saveSettings()")
