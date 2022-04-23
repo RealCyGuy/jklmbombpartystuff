@@ -1,30 +1,32 @@
 import base64
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageSequence
 from io import BytesIO
 import pyperclip
 
 im = Image.open("pictures/" + input("Enter image name (in scripts/pictures directory): "))
-im = ImageOps.exif_transpose(im)
+frames = []
+for frame in ImageSequence.Iterator(im):
+    width, height = frame.size
 
-width, height = im.size
-
-if width > height:
-    new = height
-else:
-    new = width
-left = round((width - new) / 2)
-top = round((height - new) / 2)
-right = round((width + new) / 2)
-bottom = round((height + new) / 2)
-im = im.crop((left, top, right, bottom)).resize((128, 128))
+    if width > height:
+        new = height
+    else:
+        new = width
+    left = round((width - new) / 2)
+    top = round((height - new) / 2)
+    right = round((width + new) / 2)
+    bottom = round((height + new) / 2)
+    frame = frame.crop((left, top, right, bottom)).resize((32, 32))
+    frames.append(frame)
 
 data = None
-for x in range(5):
+for x in range(7):
     quality = 100 - x * 10
     output = BytesIO()
-    im.save(output, "WEBP", quality=quality, optimize=True)
+    frames[0].save(output, "WEBP", quality=quality, optimize=True, save_all=True, append_images=frames[1:], loop=1000)
 
     data = base64.b64encode(output.getvalue()).decode()
+    print(len(data))
     if len(data) <= 10000:
         print(f"Image was compressed to {quality} quality.")
         break
