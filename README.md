@@ -6,21 +6,33 @@
 
 Explanation of the files in this repository!
 
-### `lists`
+### `.`
 
-several word lists from different sources
+the root directory
+
+- `README.md`: this file ([verified by github pilot](https://cdn.upload.systems/uploads/nPggXkRy.png))
+- `humans.py`: lots of bots playing at once
+- `utils.py`: utility functions
+- `LICENSE`: MIT license!
 
 ### `testing`
 
-bots/scripts to test bomb party words, etc.  
+bots/scripts to test bomb party words, etc.
 
 - `correct.txt`: correct words
 - `wrong.txt`: incorrect words
 - `syllables.txt`: possible syllables
-<br>
+  <br>
 
 - `roomchecker.py`: join rooms to add words to `correct.txt`
 - `wordvalidator.py`: bots that validate words
+
+### `userscripts`
+
+browser userscripts!
+
+- `detailed rules summary.user.js`: ([install](https://github.com/RealCyGuy/jklmbombpartystuff/raw/main/userscripts/detailed%20rules%20summary.user.js)) show a more detailed rules summary
+- `precise time chat.user.js`: ([install](https://github.com/RealCyGuy/jklmbombpartystuff/raw/main/userscripts/precise%20time%20chat.user.js)) show seconds in chat
 
 ### `scripts`
 
@@ -32,19 +44,8 @@ some scripts that aren't bots
 
 ### `pictures`
 
-some pictures
+penguin profile pictures for bots
 
-### `userscripts`
+### `lists`
 
-browser userscripts!
-
-- `detailed rules summary.user.js`: show a more detailed rules summary
-- `precise time chat.user.js`: show seconds in chat
-
-### `.`
-
-current directory
-
-- `humans.py`: lots of bots playing at once
-- `utils.py`: utility functions
-- `LICENSE`: MIT license!
+several word lists from different sources
