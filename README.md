@@ -34,6 +34,12 @@ some scripts that aren't bots
 
 some pictures
 
+### `userscripts`
+
+browser userscripts!
+
+- `detailedrulessummary.user.js`: show a more detailed rules summary
+
 ### `.`
 
 current directory
