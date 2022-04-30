@@ -39,6 +39,7 @@ some pictures
 browser userscripts!
 
 - `detailedrulessummary.user.js`: show a more detailed rules summary
+- `precise time chat.user.js`: show seconds in chat
 
 ### `.`
 
