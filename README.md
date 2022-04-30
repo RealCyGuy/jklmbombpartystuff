@@ -19,10 +19,13 @@ the root directory
 
 bots/scripts to test bomb party words, etc.
 
+#### lists of things
+
 - `correct.txt`: correct words
 - `wrong.txt`: incorrect words
 - `syllables.txt`: possible syllables
-  <br>
+
+#### scripts to add to lists
 
 - `roomchecker.py`: join rooms to add words to `correct.txt`
 - `wordvalidator.py`: bots that validate words
