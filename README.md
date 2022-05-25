@@ -11,9 +11,15 @@ Explanation of the files in this repository!
 the root directory
 
 - `README.md`: this file ([verified by github pilot](https://cdn.upload.systems/uploads/nPggXkRy.png))
-- `humans.py`: lots of bots playing at once
 - `utils.py`: utility functions
 - `LICENSE`: MIT license!
+
+### `humans`
+
+lots of bots playing at once!
+
+- `human.py`: human class
+- `publichumans.py`: maintain 8 bots for public play
 
 ### `testing`
 

@@ -1,25 +1,26 @@
-import random
-
 import socketio
-import requests
-import numpy as np
 
-from utils import create_token, cleanup_word
-
-token = create_token()
+from utils import cleanup_word
 
 
 class Human:
-    def __init__(self, token, url, name):
+    def __init__(
+        self, token, url, name, code, words, word_dict, used, human_ids, die, log=False
+    ):
         print(f"Created {name}!")
 
-        log = False
         self.sio = socketio.Client(logger=log, engineio_logger=log)
         self.gameSio = socketio.Client(logger=log, engineio_logger=log)
         self.token = token
         self.url = url
         self.name = name
         self.joinData = {}
+        self.code = code
+        self.words = words
+        self.word_dict = word_dict
+        self.used = used
+        self.human_ids = human_ids
+        self.die = die
 
         self.rules = {}
         self.milestone = {}
@@ -28,9 +29,11 @@ class Human:
 
         self.bonus_letters = []
 
+        self.player_ids = set()
+
     def join_room_callback(self, joinData):
         self.joinData = joinData
-        self.gameSio.emit("joinGame", ("bombparty", code, self.token))
+        self.gameSio.emit("joinGame", ("bombparty", self.code, self.token))
 
     def join_game_callback(self, *args, **kwargs):
         print(args, kwargs)
@@ -42,7 +45,7 @@ class Human:
         self.sio.emit(
             "joinRoom",
             {
-                "roomCode": code,
+                "roomCode": self.code,
                 "userToken": self.token,
                 "nickname": self.name,
                 "language": "en-US",
@@ -52,6 +55,8 @@ class Human:
         )
 
     def turn(self):
+        if self.die[0]:
+            return self.gameSio.emit("setWord", ("💥", True))
         # self.gameSio.emit("setWord", ("﷽" * 30, False))
         missing = set(self.milestone["dictionaryManifest"]["bonusAlphabet"]) - set(
             self.bonus_letters
@@ -59,12 +64,12 @@ class Human:
         best_word = ""
         top = -1
         syllable = self.milestone["syllable"]
-        syllable_list = word_dict.get(syllable)
+        syllable_list = self.word_dict.get(syllable)
         if not syllable_list:
-            syllable_list = set([word for word in words if syllable in word])
-            word_dict[syllable] = syllable_list
+            syllable_list = set([word for word in self.words if syllable in word])
+            self.word_dict[syllable] = syllable_list
         for word in syllable_list:
-            if word in used:
+            if word in self.used:
                 continue
             score = len(set(word.lower()).intersection(missing))
             if score > top:
@@ -72,7 +77,7 @@ class Human:
                 top = score
         if best_word:
             self.gameSio.emit("setWord", (best_word, True))
-            used.add(best_word)
+            self.used.add(best_word)
         else:
             self.sio.emit(
                 "chat", f"I don't know anything for {self.milestone['syllable']}."
@@ -85,40 +90,48 @@ class Human:
 
     def parse_command(self, author, message):
         if len(message) > 1 and message[0] in ["!", "/", "."]:
-            command = message[1:].strip()
-            if command == "ping":
+            split = message[1:].strip().split(" ")
+            command = split[0]
+            if (
+                command == "help" or command == "h"
+            ) and self.peerId == self.leaderPeerId:
+                self.sio.emit(
+                    "chat",
+                    'You can use prefixes: "!", "/", or ".".\n'
+                    "Commands: /help|h - /ping - /syllable|c - /start|s - /github\n"
+                    "You can run in chat or in-game.",
+                )
+            elif command == "ping":
                 self.sio.emit("chat", "pong")
             elif (
-                command == "start"
-                or command == "s"
-                and self.peerId == self.leaderPeerId
-            ):
-                self.sio.emit("chat", "Ok")
+                command == "start" or command == "s"
+            ) and self.peerId == self.leaderPeerId:
+                self.sio.emit("chat", "Ok!")
                 self.gameSio.emit("setRulesLocked", True)
+                # self.gameSio.emit("startRoundNow")
+            elif command == "now" and self.peerId == self.leaderPeerId:
                 self.gameSio.emit("startRoundNow")
             elif (
-                command == "syllable"
-                or command == "c"
-                and self.peerId == self.leaderPeerId
-            ):
+                command == "syllable" or command == "c"
+            ) and self.peerId == self.leaderPeerId:
                 syllable = self.milestone.get("syllable", "")
                 if syllable:
-                    syllable_list = word_dict.get(syllable)
+                    syllable_list = self.word_dict.get(syllable)
                     if not syllable_list:
                         syllable_list = set(
-                            [word for word in words if syllable in word]
+                            [word for word in self.words if syllable in word]
                         )
-                        word_dict[syllable] = syllable_list
+                        self.word_dict[syllable] = syllable_list
                     syllable_list = sorted(list(syllable_list), key=lambda x: len(x))
                     p_words = []
                     for word in syllable_list:
-                        if word in used:
+                        if word in self.used:
                             continue
                         p_words.append(word.upper())
                         if len(p_words) >= 5:
                             break
                     for word in reversed(syllable_list):
-                        if word in used or word in p_words:
+                        if word in self.used or word in p_words:
                             continue
                         p_words.append(word.upper())
                         if len(p_words) >= 10:
@@ -129,6 +142,8 @@ class Human:
                         self.sio.emit("chat", f"Couldn't find anything for {syllable}.")
                 else:
                     self.sio.emit("chat", "No syllable!")
+            elif command == "github" and self.peerId == self.leaderPeerId:
+                self.sio.emit("chat", "https://github.com/RealCyGuy/jklmbombpartystuff")
 
     def events(self):
         @self.sio.event
@@ -144,7 +159,7 @@ class Human:
             self.leaderPeerId = data.get("leaderPeerId", -1)
             self.peerId = data.get("selfPeerId", -2)
             if self.peerId >= 0:
-                human_ids.add(self.peerId)
+                self.human_ids.add(self.peerId)
             if self.is_leader():
                 self.gameSio.emit("setRulesLocked", False)
                 self.gameSio.emit(
@@ -152,13 +167,27 @@ class Human:
                     {
                         "promptDifficulty": "custom",
                         "customPromptDifficulty": 1,
-                        "startingLives": 1,
+                        "startingLives": 2,
                         "maxLives": 10,
                         "maxPromptAge": 1,
                     },
                 )
+                self.die[0] = False
+                self.players_ids = set(
+                    [player["profile"]["peerId"] for player in data["players"]]
+                )
             self.milestone = data["milestone"]
             self.gameSio.emit("joinRound")
+
+        @self.gameSio.event
+        def addPlayer(player):
+            if self.is_leader():
+                self.player_ids.add(player["profile"]["peerId"])
+
+        @self.gameSio.event
+        def removePlayer(player_peer_id):
+            if self.is_leader():
+                self.player_ids.remove(player_peer_id)
 
         @self.gameSio.event
         def setLeaderPeer(peer_id):
@@ -174,16 +203,31 @@ class Human:
 
         @self.gameSio.event
         def setMilestone(milestone, time):
+            if (
+                self.is_leader()
+                and milestone.get("name") == "seating"
+                and self.milestone.get("name") == "round"
+            ):
+                self.player_ids.clear()
             self.milestone = milestone
             if milestone["name"] == "round":
+                if self.human_ids == self.player_ids:
+                    self.die[0] = True
                 if milestone["currentPlayerPeerId"] == self.peerId:
                     self.turn()
             elif milestone["name"] == "seating":
                 self.gameSio.emit("joinRound")
                 if self.is_leader():
-                    global used
-                    used = set()
+                    self.used.clear()
                     self.gameSio.emit("setRulesLocked", False)
+                    self.die[0] = False
+
+        @self.gameSio.event
+        def livesLost(player_peer_id, lives):
+            if lives == 0 and self.is_leader():
+                self.player_ids.remove(player_peer_id)
+                if self.player_ids == self.human_ids:
+                    self.die[0] = True
 
         @self.gameSio.event
         def failWord(peer_id, reason):
@@ -195,8 +239,8 @@ class Human:
         @self.gameSio.event
         def correctWord(data):
             if self.is_leader():
-                if data["playerPeerId"] not in human_ids:
-                    used.add(cleanup_word(latest_word.lower()))
+                if data["playerPeerId"] not in self.human_ids:
+                    self.used.add(cleanup_word(latest_word.lower()))
             if self.peerId == data["playerPeerId"]:
                 self.bonus_letters = data["bonusLetters"]
 
@@ -210,47 +254,11 @@ class Human:
         def chat(author, message):
             self.parse_command(author, message)
 
-
-with open("testing/correct.txt", "r") as f:
-    words = set(f.read().split())
-with open("lists/kaggle.txt", "r") as f:
-    words = words.union(f.read().split())
-with open("testing/wrong.txt", "r") as f:
-    words = words.difference(set(f.read().split()))
-
-words = [word.lower() for word in words]
-words = list(set(words))
-random.shuffle(words)
-words.sort(key=lambda word: len(set(word)), reverse=True)
-words = np.array(words)
-print(f"Loaded {len(words)} words.")
-used = set()
-
-with open("testing/syllables.txt", "r") as f:
-    syllables = set(f.read().split())
-word_dict = {}
-
-payload = {
-    "name": "Humans only!",
-    "isPublic": False,
-    "gameId": "bombparty",
-    "creatorUserToken": token,
-}
-headers = {"content-type": "application/json"}
-
-response = requests.request(
-    "POST", "https://jklm.fun/api/startRoom", json=payload, headers=headers
-)
-data = response.json()
-code = data.get("roomCode")
-if not code:
-    raise Exception
-print(f"https://jklm.fun/{code}")
-humans = []
-human_ids = set()
-latest_word = ""
-for x in range(4):
-    humans.append(Human(token, data["url"], f"Human {x}"))
-    humans[-1].connect_and_join()
-    token = create_token()
-humans[0].sio.wait()
+        @self.sio.event
+        def chatterAdded(profile):
+            if self.is_leader():
+                self.sio.emit(
+                    "chat",
+                    f'Welcome {profile["nickname"]}! You can run "/s" or ".s" or "!s" to start the game. '
+                    f"Or use help command for help.",
+                )
