@@ -18,8 +18,9 @@ the root directory
 
 lots of bots playing at once!
 
-- `human.py`: human class
 - `publichumans.py`: maintain 8 bots for public play
+- `core/human.py`: human (bot) class
+- `core/state.py`: shared state class
 
 ### `testing`
 
