@@ -117,7 +117,7 @@ class State:
             return
         self.humans[self.response_index].sio.emit("chat", message[:300])
         self.response_index += 1
-        if self.response_index >= len(self.humans) - 1:
+        if self.response_index >= len(self.humans):
             self.response_index = 0
 
     def parse_command(self, author, message, leader, ingame=False):
